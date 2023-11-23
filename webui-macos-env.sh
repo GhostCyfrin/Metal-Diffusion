@@ -5,12 +5,16 @@
 ####################################################################
 
 export install_dir="$HOME"
-export COMMANDLINE_ARGS="--skip-torch-cuda-test --skip-install --no-download-sd-model --no-half-vae --upcast-sampling --use-cpu interrogate"
-export TORCH_COMMAND="pip install torch==2.0.1 torchvision==0.15.2"
-export PYTORCH_ENABLE_MPS_FALLBACK=1
+export COMMANDLINE_ARGS="--skip-torch-cuda-test --skip-install --opt-split-attention --no-half --precision full --no-half-vae --opt-sdp-attention --upcast-sampling --enable-insecure-extension-access --use-cpu all --share --gradio-auth Colin:17NOV2005"
 
-# Put transformers cache with the other models
-export TRANSFORMERS_CACHE="$PWD/models/transformers"
+# --use-cpu all
+# --share --gradio-auth Colin:17NOV2005
+# --reinstall-torch
+
+export TORCH_COMMAND="pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cpu"
+
+export PYTORCH_ENABLE_MPS_FALLBACK=1
+export PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0
 
 # Add git and python to PATH
 export PATH="$PWD/bin-deps/python/3.10.13/bin:$PWD/bin-deps/git/bin:$PATH"

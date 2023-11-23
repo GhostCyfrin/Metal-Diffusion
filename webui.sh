@@ -74,7 +74,19 @@ fi
 # python3 venv without trailing slash (defaults to ${install_dir}/${clone_dir}/venv)
 if [[ -z "${venv_dir}" ]] && [[ $use_venv -eq 1 ]]
 then
-    venv_dir="venv"
+    if [[ -f .venv_parent_dir ]]; then
+        read -r venv_parent_dir < .venv_parent_dir
+        if [[ ! -z "${venv_parent_dir}" ]]; then
+            ln -fhs "$PWD" "${venv_parent_dir}"
+            chmod -h +rw "${venv_parent_dir}"
+            if [[ -d "${venv_parent_dir}" ]]; then
+                venv_dir="${venv_parent_dir}/venv"
+            fi
+        fi
+    fi
+    if [[ -z "${venv_dir}" ]]; then
+        venv_dir="venv"
+    fi
 fi
 
 if [[ -z "${LAUNCH_SCRIPT}" ]]
@@ -156,9 +168,8 @@ case "$gpu_info" in
     *"Navi 2"*) export HSA_OVERRIDE_GFX_VERSION=10.3.0
     ;;
     *"Navi 3"*) [[ -z "${TORCH_COMMAND}" ]] && \
-         export TORCH_COMMAND="pip install --pre torch torchvision --index-url https://download.pytorch.org/whl/nightly/rocm5.6"
-        # Navi 3 needs at least 5.5 which is only on the nightly chain, previous versions are no longer online (torch==2.1.0.dev-20230614+rocm5.5 torchvision==0.16.0.dev-20230614+rocm5.5 torchaudio==2.1.0.dev-20230614+rocm5.5)
-        # so switch to nightly rocm5.6 without explicit versions this time
+         export TORCH_COMMAND="pip install torch torchvision --index-url https://download.pytorch.org/whl/test/rocm5.6"
+        # Navi 3 needs at least 5.5 which is only on the torch 2.1.0 release candidates right now
     ;;
     *"Renoir"*) export HSA_OVERRIDE_GFX_VERSION=9.0.0
         printf "\n%s\n" "${delimiter}"
@@ -248,7 +259,10 @@ prepare_tcmalloc() {
 }
 
 KEEP_GOING=1
-export SD_WEBUI_RESTART=tmp/restart
+if [[ -z "${SD_WEBUI_RESTART_PATH}" ]]; then
+    SD_WEBUI_RESTART_PATH=tmp/restart
+fi
+export SD_WEBUI_RESTART="${SD_WEBUI_RESTART_PATH}"
 while [[ "$KEEP_GOING" -eq "1" ]]; do
     if [[ ! -z "${ACCELERATE}" ]] && [ ${ACCELERATE}="True" ] && [ -x "$(command -v accelerate)" ]; then
         printf "\n%s\n" "${delimiter}"
@@ -264,7 +278,7 @@ while [[ "$KEEP_GOING" -eq "1" ]]; do
         "${python_cmd}" -u "${LAUNCH_SCRIPT}" "$@"
     fi
 
-    if [[ ! -f tmp/restart ]]; then
+    if [[ ! -f "${SD_WEBUI_RESTART}" ]]; then
         KEEP_GOING=0
     fi
 done
