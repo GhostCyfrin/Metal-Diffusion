@@ -1,4 +1,5 @@
 # Stable Diffusion web UI
+# THIS IS MEANT AS A BACKUP FOR MY MODIFIED INSTALL!
 A browser interface based on Gradio library for Stable Diffusion.
 
 ![](screenshot.png)
